@@ -108,12 +108,13 @@ Hypher.prototype.hyphenateText = function (str, minLength) {
     // compound separators and ZWNJ so we don't need
     // any special cases for those characters.
     var words = str.split(/\b/g);
+    var wordsLength = words.length;
 
-    for (var i = 0; i < words.length; i += 1) {
+    for (var i = 0; i < wordsLength; i += 1) {
         if (words[i].indexOf('/') !== -1) {
             // Don't insert a zero width space if the slash is at the beginning or end
             // of the text, or right after or before a space.
-            if (i !== 0 && i !== words.length - 1 && !(/\s+\/|\/\s+/.test(words[i]))) {
+            if (i !== 0 && i !== wordsLength - 1 && !(/\s+\/|\/\s+/.test(words[i]))) {
                 words[i] += '\u200B';
             }
         } else if (words[i].length > minLength) {
@@ -122,6 +123,16 @@ Hypher.prototype.hyphenateText = function (str, minLength) {
     }
     return words.join('');
 };
+
+/**
+ * Removes hyphenation from text.
+ *
+ * @param {!string} str The text to remove hyphenation from.
+ * @return {!string} The same text with soft hyphens and zero width characters removed.
+ */
+Hypher.removeHyphenation = function (str) {
+    return str.replace(/(\u00AD|\u200B)/g, '');
+}
 
 /**
  * Hyphenates a word.
@@ -197,16 +208,32 @@ module.exports = Hypher;window['Hypher'] = module.exports;
 
 window['Hypher']['languages'] = {};
 }());(function ($) {
-    $.fn.hyphenate = function (language) {
-        if (window['Hypher']['languages'][language]) {
-            return this.each(function () {
-                var i = 0, len = this.childNodes.length;
-                for (; i < len; i += 1) {
-                    if (this.childNodes[i].nodeType === 3) {
-                        this.childNodes[i].nodeValue = window['Hypher']['languages'][language].hyphenateText(this.childNodes[i].nodeValue);
+    $.fn.hyphenate = function (language, minLength) {
+        var hypher = window['Hypher'];
+
+        if (hypher) {
+            if (language === false) {
+                return this.each(function () {
+                    var len = this.childNodes.length;
+                    for (var i = 0; i < len; i++) {
+                        var node = this.childNodes[i];
+                        if (node.nodeType === 3)
+                            node.nodeValue = hypher.removeHyphenation(node.nodeValue);
                     }
-                }
-            });
+                });
+            } else if (hypher = hypher['languages'][language]) {
+                minLength = minLength || 4;
+                return this.each(function () {
+                    var len = this.childNodes.length;
+                    for (var i = 0; i < len; i++) {
+                        var node = this.childNodes[i];
+                        if (node.nodeType === 3)
+                            node.nodeValue = hypher.hyphenateText(node.nodeValue, minLength);
+                    }
+                });
+            }
         }
+
+        return this;
     };
 }(jQuery));
