@@ -1,3 +1,8 @@
+## Changed by urraka
+* Added `Hypher.removeHyphenation(str)`, which returns a new string with hyphenation removed.
+* Added optional parameter to jquery plugin to specify minimum word length to hyphenate. `elem.hyphenate("en-us", 6)`
+* Added ability to remove hyphenation from jquery plugin, passing false as parameter. `elem.hyphenate(false)`
+
 ## Hypher
 
 A small and fast JavaScript hyphenation engine. Can be used in Node.js and as a jQuery plugin.
